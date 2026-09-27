@@ -13,8 +13,14 @@ export interface GeneratedIcon {
   pngData: Uint8Array;
 }
 
+export interface ChromaKeyConfig {
+  enabled: boolean;
+  tolerance: number;
+}
+
 export interface GenerationOptions {
   sizes: IconSize[];
   fitMode: FitMode;
   background: BackgroundConfig;
+  chromaKey: ChromaKeyConfig;
 }

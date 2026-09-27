@@ -14,3 +14,5 @@ export const AVAILABLE_SIZES: IconSize[] = [16, 24, 32, 48, 64, 128, 256];
 export const DEFAULT_SIZES: IconSize[] = [16, 32, 48, 256];
 
 export const MAX_ICON_DIMENSION = 256;
+
+export const DEFAULT_CHROMA_KEY_TOLERANCE = 32;
