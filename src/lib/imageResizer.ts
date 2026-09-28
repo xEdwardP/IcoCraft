@@ -6,7 +6,7 @@ import type {
 } from "../types";
 import { applyChromaKey } from "./backgroundRemoval";
 
-function loadImageElement(file: File): Promise<HTMLImageElement> {
+export function loadImageElement(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const objectUrl = URL.createObjectURL(file);
     const image = new Image();
@@ -179,4 +179,24 @@ export async function generateIcons(
   }
 
   return icons;
+}
+
+export async function removeBackgroundOriginalSize(
+  file: File,
+  tolerance: number,
+): Promise<Uint8Array> {
+  const image = await loadImageElement(file);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("No se pudo crear el contexto de canvas.");
+  }
+  ctx.drawImage(image, 0, 0);
+
+  applyChromaKey(canvas, tolerance);
+
+  return canvasToPngBytes(canvas);
 }

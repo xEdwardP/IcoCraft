@@ -1,12 +1,15 @@
 import { useState } from "react";
 import BackgroundPicker from "./components/BackgroundPicker";
 import ChromaKeyToggle from "./components/ChromaKeyToggle";
+import DownloadButton from "./components/DownloadButton";
 import FitModeSelector from "./components/FitModeSelector";
 import ImageDropzone from "./components/ImageDropzone";
 import PreviewGrid from "./components/PreviewGrid";
 import ProgressBar from "./components/ProgressBar";
+import RemoveBackgroundExport from "./components/RemoveBackgroundExport";
 import SizeSelector from "./components/SizeSelector";
 import { DEFAULT_CHROMA_KEY_TOLERANCE, DEFAULT_SIZES } from "./lib/constants";
+import { getBaseFileName } from "./lib/filenames";
 import { generateIcons } from "./lib/imageResizer";
 import type {
   BackgroundConfig,
@@ -35,6 +38,15 @@ export default function App() {
 
   const canGenerate =
     selectedFile !== null && sizes.length > 0 && !isGenerating;
+
+  const fileNameBase = selectedFile
+    ? getBaseFileName(selectedFile.name)
+    : "icocraft";
+
+  const handleImageAccepted = (file: File) => {
+    setSelectedFile(file);
+    setIcons([]);
+  };
 
   const handleGenerate = async () => {
     if (!selectedFile) return;
@@ -67,7 +79,7 @@ export default function App() {
         Sube una imagen para generar tus iconos .ico
       </p>
 
-      <ImageDropzone onImageAccepted={setSelectedFile} />
+      <ImageDropzone onImageAccepted={handleImageAccepted} />
 
       {selectedFile && (
         <p className="text-sm text-slate-500">
@@ -79,6 +91,12 @@ export default function App() {
       <FitModeSelector value={fitMode} onChange={setFitMode} />
       <BackgroundPicker value={background} onChange={setBackground} />
       <ChromaKeyToggle value={chromaKey} onChange={setChromaKey} />
+      <RemoveBackgroundExport
+        file={selectedFile}
+        tolerance={chromaKey.tolerance}
+        enabled={chromaKey.enabled}
+        fileNameBase={fileNameBase}
+      />
 
       <button
         type="button"
@@ -97,6 +115,9 @@ export default function App() {
       )}
 
       <PreviewGrid icons={icons} />
+      {icons.length > 0 && (
+        <DownloadButton icons={icons} fileNameBase={fileNameBase} />
+      )}
     </main>
   );
 }
