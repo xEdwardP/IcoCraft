@@ -18,6 +18,7 @@ import type {
   GeneratedIcon,
   IconSize,
 } from "./types";
+import DownloadZipButton from "./components/DownloadZipButton";
 
 export default function App() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -116,7 +117,10 @@ export default function App() {
 
       <PreviewGrid icons={icons} />
       {icons.length > 0 && (
-        <DownloadButton icons={icons} fileNameBase={fileNameBase} />
+        <>
+          <DownloadButton icons={icons} fileNameBase={fileNameBase} />
+          <DownloadZipButton icons={icons} fileNameBase={fileNameBase} />
+        </>
       )}
     </main>
   );
