@@ -1,9 +1,106 @@
 @import "tailwindcss";
 
-@theme {
-  --color-brand: #4f46e5;
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --font-sans:
+    "Bricolage Grotesque Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-solid: var(--accent-solid);
+  --color-accent-solid-hover: var(--accent-solid-hover);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
 }
 
-body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+:root {
+  color-scheme: light;
+  --canvas: #eef1f6;
+  --surface: #ffffff;
+  --sunken: #f4f6fa;
+  --line: #d8deea;
+  --ink: #0f1b2d;
+  --muted: #556279;
+  --accent: #ff6a1f;
+  --accent-solid: #c94510;
+  --accent-solid-hover: #a8380d;
+  --danger: #c0283a;
+  --warning: #93540a;
+}
+
+.dark {
+  color-scheme: dark;
+  --canvas: #0a101b;
+  --surface: #111a29;
+  --sunken: #0d1522;
+  --line: #24324a;
+  --ink: #e9eff9;
+  --muted: #97a6bf;
+  --accent: #ff7b3f;
+  --accent-solid: #c94510;
+  --accent-solid-hover: #a8380d;
+  --danger: #ff8593;
+  --warning: #f0b45c;
+}
+
+@layer base {
+  body {
+    @apply bg-canvas text-ink antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="range"] {
+    accent-color: var(--accent);
+  }
+}
+
+@utility checker {
+  background-color: var(--surface);
+  background-image:
+    linear-gradient(
+      45deg,
+      color-mix(in srgb, var(--line) 70%, transparent) 25%,
+      transparent 25%,
+      transparent 75%,
+      color-mix(in srgb, var(--line) 70%, transparent) 75%
+    ),
+    linear-gradient(
+      45deg,
+      color-mix(in srgb, var(--line) 70%, transparent) 25%,
+      transparent 25%,
+      transparent 75%,
+      color-mix(in srgb, var(--line) 70%, transparent) 75%
+    );
+  background-size: 16px 16px;
+  background-position:
+    0 0,
+    8px 8px;
+}
+
+.no-transitions,
+.no-transitions *,
+.no-transitions ::before,
+.no-transitions ::after {
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }

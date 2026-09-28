@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { triggerDownload } from "../lib/download";
 import { removeBackgroundOriginalSize } from "../lib/imageResizer";
+import Button from "./ui/Button";
+import { DownloadIcon } from "./ui/icons";
 
 interface RemoveBackgroundExportProps {
   file: File | null;
@@ -32,25 +34,29 @@ export default function RemoveBackgroundExport({
       const pngBytes = await removeBackgroundOriginalSize(file, tolerance);
       triggerDownload(pngBytes, `${fileNameBase}-sin-fondo.png`, "image/png");
     } catch {
-      setError("No se pudo generar la imagen sin fondo.");
+      setError("No se pudo generar la imagen sin fondo. Intenta de nuevo.");
     } finally {
       setIsProcessing(false);
     }
   };
 
   return (
-    <div className="w-full max-w-md">
-      <button
-        type="button"
+    <div>
+      <Button
         onClick={() => void handleDownload()}
         disabled={!file || isProcessing}
-        className="w-full rounded border border-brand px-4 py-2 text-sm font-medium text-brand disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {isProcessing
-          ? "Procesando..."
-          : "Descargar imagen sin fondo (tamaño original)"}
-      </button>
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+        <DownloadIcon className="h-4 w-4" />
+        {isProcessing ? "Procesando..." : "Descargar imagen sin fondo"}
+      </Button>
+      <p className="mt-1.5 text-xs text-muted">
+        PNG con el tamaño original, solo con el fondo transparente.
+      </p>
+      {error && (
+        <p role="alert" className="mt-1.5 text-xs text-danger">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

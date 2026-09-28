@@ -76,12 +76,24 @@ function createCanvas(size: number): {
   return { canvas, ctx };
 }
 
+function renderNaturalSizeCanvas(image: HTMLImageElement): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("No se pudo crear el contexto de canvas.");
+  }
+  ctx.drawImage(image, 0, 0);
+  return canvas;
+}
+
 function extractSquareSource(
-  image: HTMLImageElement,
+  image: CanvasImageSource,
+  width: number,
+  height: number,
   fitMode: FitMode,
 ): HTMLCanvasElement {
-  const width = image.naturalWidth;
-  const height = image.naturalHeight;
   const box = computeSquareContentBox(width, height, fitMode);
   const { canvas, ctx } = createCanvas(box.size);
 
@@ -162,8 +174,22 @@ export async function generateIcons(
   onProgress?: (done: number, total: number) => void,
 ): Promise<GeneratedIcon[]> {
   const image = await loadImageElement(file);
-  const squareSource = extractSquareSource(image, options.fitMode);
+  const width = image.naturalWidth;
+  const height = image.naturalHeight;
 
+  let content: CanvasImageSource = image;
+  if (options.chromaKey.enabled) {
+    const original = renderNaturalSizeCanvas(image);
+    applyChromaKey(original, options.chromaKey.tolerance);
+    content = original;
+  }
+
+  const squareSource = extractSquareSource(
+    content,
+    width,
+    height,
+    options.fitMode,
+  );
   const icons: GeneratedIcon[] = [];
 
   if (options.chromaKey.enabled) {
@@ -186,15 +212,7 @@ export async function removeBackgroundOriginalSize(
   tolerance: number,
 ): Promise<Uint8Array> {
   const image = await loadImageElement(file);
-
-  const canvas = document.createElement("canvas");
-  canvas.width = image.naturalWidth;
-  canvas.height = image.naturalHeight;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    throw new Error("No se pudo crear el contexto de canvas.");
-  }
-  ctx.drawImage(image, 0, 0);
+  const canvas = renderNaturalSizeCanvas(image);
 
   applyChromaKey(canvas, tolerance);
 

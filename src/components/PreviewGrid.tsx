@@ -5,11 +5,6 @@ interface PreviewGridProps {
   icons: GeneratedIcon[];
 }
 
-const CHECKERBOARD_STYLE = {
-  backgroundImage: "repeating-conic-gradient(#e5e7eb 0% 25%, #ffffff 0% 50%)",
-  backgroundSize: "16px 16px",
-};
-
 export default function PreviewGrid({ icons }: PreviewGridProps) {
   const objectUrls = useMemo(
     () =>
@@ -32,25 +27,28 @@ export default function PreviewGrid({ icons }: PreviewGridProps) {
   }
 
   return (
-    <div className="w-full max-w-md">
-      <h2 className="mb-2 font-semibold text-slate-700">Vista previa</h2>
-      <div className="flex flex-wrap gap-4">
+    <div>
+      <p className="mb-4 text-sm text-muted">
+        Cada icono se muestra en su tamaño real, en píxeles.
+      </p>
+      <ul className="flex flex-wrap items-end gap-x-5 gap-y-6">
         {icons.map((icon, index) => (
-          <div key={icon.size} className="flex flex-col items-center gap-1">
-            <div
-              className="flex h-16 w-16 items-center justify-center rounded border border-slate-200"
-              style={CHECKERBOARD_STYLE}
-            >
+          <li key={icon.size} className="flex flex-col items-center gap-2">
+            <div className="checker rounded-md border border-line p-1">
               <img
                 src={objectUrls[index]}
-                alt={`Icono de ${icon.size}px`}
-                className="max-h-full max-w-full"
+                alt={`Icono de ${icon.size} por ${icon.size} píxeles`}
+                width={icon.size}
+                height={icon.size}
+                className="block h-auto max-w-full [image-rendering:pixelated]"
               />
             </div>
-            <span className="text-xs text-slate-500">{icon.size}px</span>
-          </div>
+            <span className="text-xs tabular-nums text-muted">
+              {icon.size} px
+            </span>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }

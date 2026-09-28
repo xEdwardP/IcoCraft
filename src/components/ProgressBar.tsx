@@ -11,15 +11,22 @@ export default function ProgressBar({ current, total }: ProgressBarProps) {
   const percentage = Math.round((current / total) * 100);
 
   return (
-    <div className="w-full max-w-md" role="status" aria-live="polite">
-      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+    <div className="w-full max-w-xs">
+      <div
+        role="progressbar"
+        aria-label="Progreso de generación"
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-valuenow={current}
+        className="h-2 w-full overflow-hidden rounded-full bg-line"
+      >
         <div
-          className="h-full rounded-full bg-brand transition-all"
+          className="h-full rounded-full bg-accent transition-[width]"
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <p className="mt-1 text-xs text-slate-500">
-        Generando iconos... {current}/{total}
+      <p className="mt-2 text-center text-sm text-muted" aria-live="polite">
+        Generando iconos: {current} de {total}
       </p>
     </div>
   );

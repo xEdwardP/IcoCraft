@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import {
   AVAILABLE_SIZES,
   DEFAULT_SIZES,
   MAX_ICON_DIMENSION,
 } from "../lib/constants";
 import type { IconSize } from "../types";
+import Button from "./ui/Button";
+import Notice from "./ui/Notice";
 
 interface SizeSelectorProps {
   selectedSizes: IconSize[];
@@ -18,6 +20,10 @@ export default function SizeSelector({
   const [customSize, setCustomSize] = useState("");
   const [customError, setCustomError] = useState<string | null>(null);
 
+  const visibleSizes = Array.from(
+    new Set([...AVAILABLE_SIZES, ...selectedSizes]),
+  ).sort((a, b) => a - b);
+
   const toggleSize = (size: IconSize) => {
     if (selectedSizes.includes(size)) {
       onChange(selectedSizes.filter((current) => current !== size));
@@ -26,7 +32,8 @@ export default function SizeSelector({
     }
   };
 
-  const addCustomSize = () => {
+  const addCustomSize = (event: FormEvent) => {
+    event.preventDefault();
     const parsed = Number(customSize);
 
     if (
@@ -35,111 +42,102 @@ export default function SizeSelector({
       parsed > MAX_ICON_DIMENSION
     ) {
       setCustomError(
-        `Ingresa un número entero entre 1 y ${MAX_ICON_DIMENSION}.`,
+        `Escribe un número entero entre 1 y ${MAX_ICON_DIMENSION}.`,
       );
       return;
     }
 
-    if (selectedSizes.includes(parsed)) {
-      setCustomError("Ese tamaño ya está seleccionado.");
-      return;
+    if (!selectedSizes.includes(parsed)) {
+      onChange([...selectedSizes, parsed].sort((a, b) => a - b));
     }
-
-    onChange([...selectedSizes, parsed].sort((a, b) => a - b));
     setCustomSize("");
     setCustomError(null);
   };
 
   return (
-    <fieldset className="w-full max-w-md">
-      <legend className="mb-2 font-semibold text-slate-700">
-        Tamaños de icono
-      </legend>
-
-      <div className="mb-3 flex gap-2 text-xs">
-        <button
-          type="button"
-          onClick={() => onChange([...DEFAULT_SIZES])}
-          className="rounded bg-slate-100 px-2 py-1 hover:bg-slate-200"
-        >
-          Recomendados
-        </button>
-        <button
-          type="button"
-          onClick={() => onChange([...AVAILABLE_SIZES])}
-          className="rounded bg-slate-100 px-2 py-1 hover:bg-slate-200"
-        >
-          Todos
-        </button>
-        <button
-          type="button"
-          onClick={() => onChange([])}
-          className="rounded bg-slate-100 px-2 py-1 hover:bg-slate-200"
-        >
-          Ninguno
-        </button>
+    <fieldset>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+        <legend className="whitespace-nowrap text-sm font-medium">
+          Tamaños
+        </legend>
+        <div className="flex gap-1">
+          <Button
+            variant="ghost"
+            className="px-2 py-1 text-xs"
+            onClick={() => onChange([...DEFAULT_SIZES])}
+          >
+            Recomendados
+          </Button>
+          <Button
+            variant="ghost"
+            className="px-2 py-1 text-xs"
+            onClick={() => onChange([...AVAILABLE_SIZES])}
+          >
+            Todos
+          </Button>
+          <Button
+            variant="ghost"
+            className="px-2 py-1 text-xs"
+            onClick={() => onChange([])}
+          >
+            Ninguno
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-2">
-        {AVAILABLE_SIZES.map((size) => (
-          <label key={size} className="flex items-center gap-1 text-sm">
+      <div className="flex flex-wrap gap-2">
+        {visibleSizes.map((size) => (
+          <label key={size} className="relative">
             <input
               type="checkbox"
               checked={selectedSizes.includes(size)}
               onChange={() => toggleSize(size)}
+              className="peer sr-only"
             />
-            {size}px
+            <span className="inline-flex min-w-16 cursor-pointer select-none items-center justify-center rounded-full border border-line bg-surface px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:border-ink/40 hover:text-ink peer-checked:border-ink peer-checked:bg-ink peer-checked:text-canvas peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink">
+              {size} px
+            </span>
           </label>
         ))}
       </div>
 
-      <div className="mt-3 flex items-center gap-2">
+      <form onSubmit={addCustomSize} className="mt-3 flex items-center gap-2">
+        <label htmlFor="custom-size" className="sr-only">
+          Tamaño personalizado en píxeles
+        </label>
         <input
+          id="custom-size"
           type="number"
+          inputMode="numeric"
           min={1}
           max={MAX_ICON_DIMENSION}
           value={customSize}
           onChange={(event) => setCustomSize(event.target.value)}
-          placeholder="Tamaño personalizado"
-          className="w-40 rounded border border-slate-300 px-2 py-1 text-sm"
+          placeholder="Otro tamaño"
+          aria-invalid={customError !== null}
+          className="w-44 rounded-lg border border-line bg-surface px-3 py-2 text-sm placeholder:text-muted"
         />
-        <button
-          type="button"
-          onClick={addCustomSize}
-          className="rounded bg-brand px-3 py-1 text-sm text-white"
-        >
+        <Button type="submit" className="py-2">
           Agregar
-        </button>
-      </div>
+        </Button>
+      </form>
       {customError && (
-        <p className="mt-1 text-xs text-red-600">{customError}</p>
-      )}
-
-      {selectedSizes.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {selectedSizes.map((size) => (
-            <span
-              key={size}
-              className="flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-1 text-xs text-indigo-700"
-            >
-              {size}px
-              <button
-                type="button"
-                onClick={() => toggleSize(size)}
-                aria-label={`Quitar tamaño ${size}px`}
-              >
-                ×
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-
-      {selectedSizes.length === 0 && (
-        <p className="mt-2 text-xs text-amber-600">
-          Selecciona al menos un tamaño.
+        <p role="alert" className="mt-2 text-xs text-danger">
+          {customError}
         </p>
       )}
+
+      <div className="mt-3">
+        {selectedSizes.length === 0 ? (
+          <Notice variant="warning">Selecciona al menos un tamaño.</Notice>
+        ) : (
+          <p className="text-xs text-muted">
+            {selectedSizes.length === 1
+              ? "1 tamaño seleccionado"
+              : `${selectedSizes.length} tamaños seleccionados`}
+          </p>
+        )}
+      </div>
     </fieldset>
   );
 }

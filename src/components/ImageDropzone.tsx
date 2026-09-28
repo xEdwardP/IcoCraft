@@ -1,34 +1,33 @@
 import {
   useCallback,
-  useEffect,
   useRef,
   useState,
   type ChangeEvent,
   type DragEvent,
-  type KeyboardEvent,
 } from "react";
 import { ACCEPTED_MIME_TYPES, MAX_FILE_SIZE_MB } from "../lib/constants";
 import { validateImageFile } from "../lib/validators";
+import { UploadIcon } from "./ui/icons";
+import Notice from "./ui/Notice";
 
-interface ImageDropzoneProps {
-  /** Called only when the file passes validation. */
-  onImageAccepted: (file: File) => void;
+interface LoadedImage {
+  name: string;
+  url: string;
 }
 
-export default function ImageDropzone({ onImageAccepted }: ImageDropzoneProps) {
+interface ImageDropzoneProps {
+  onImageAccepted: (file: File) => void;
+  loaded: LoadedImage | null;
+}
+
+export default function ImageDropzone({
+  onImageAccepted,
+  loaded,
+}: ImageDropzoneProps) {
   const [isDragging, setIsDragging] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Revoke the previous preview URL whenever it changes or the component unmounts,
-  // so we don't leak object URLs as the user tries different images.
-  useEffect(() => {
-    return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    };
-  }, [previewUrl]);
 
   const processFile = useCallback(
     async (file: File) => {
@@ -36,13 +35,9 @@ export default function ImageDropzone({ onImageAccepted }: ImageDropzoneProps) {
       setErrors(result.errors);
       setWarnings(result.warnings);
 
-      if (!result.valid) {
-        setPreviewUrl(null);
-        return;
+      if (result.valid) {
+        onImageAccepted(file);
       }
-
-      setPreviewUrl(URL.createObjectURL(file));
-      onImageAccepted(file);
     },
     [onImageAccepted],
   );
@@ -60,57 +55,71 @@ export default function ImageDropzone({ onImageAccepted }: ImageDropzoneProps) {
   const handleInputChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
+      event.target.value = "";
       if (file) void processFile(file);
     },
     [processFile],
   );
 
-  const openFilePicker = useCallback(() => {
-    inputRef.current?.click();
-  }, []);
-
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        openFilePicker();
-      }
-    },
-    [openFilePicker],
-  );
-
   return (
-    <div className="w-full max-w-md">
+    <div>
       <div
-        role="button"
-        tabIndex={0}
-        aria-label="Cargar imagen: arrastra un archivo o presiona para seleccionarlo"
-        onClick={openFilePicker}
-        onKeyDown={handleKeyDown}
         onDragOver={(event) => {
           event.preventDefault();
           setIsDragging(true);
         }}
-        onDragLeave={() => setIsDragging(false)}
+        onDragLeave={(event) => {
+          if (
+            !event.currentTarget.contains(event.relatedTarget as Node | null)
+          ) {
+            setIsDragging(false);
+          }
+        }}
         onDrop={handleDrop}
-        className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-10 text-center transition-colors focus:outline-none focus:ring-2 focus:ring-brand ${
-          isDragging ? "border-brand bg-indigo-50" : "border-slate-300 bg-white"
+        className={`rounded-xl border-2 border-dashed transition-colors ${
+          isDragging
+            ? "border-accent bg-accent/10"
+            : "border-line bg-sunken hover:border-ink/40"
         }`}
       >
-        {previewUrl ? (
-          <img
-            src={previewUrl}
-            alt="Vista previa de la imagen cargada"
-            className="mb-4 h-32 w-32 rounded object-contain"
-          />
-        ) : (
-          <p className="mb-2 text-slate-500">
-            Arrastra una imagen aquí o haz clic para seleccionarla
-          </p>
-        )}
-        <p className="text-xs text-slate-400">
-          PNG, JPG o WebP — máximo {MAX_FILE_SIZE_MB} MB
-        </p>
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          className="flex w-full cursor-pointer items-center gap-4 rounded-[inherit] p-4 text-left"
+        >
+          {loaded ? (
+            <>
+              <span className="checker flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md border border-line">
+                <img
+                  src={loaded.url}
+                  alt=""
+                  className="max-h-full max-w-full object-contain"
+                />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-medium">
+                  {loaded.name}
+                </span>
+                <span className="block text-xs text-muted">
+                  Haz clic o arrastra otra imagen para cambiarla
+                </span>
+              </span>
+            </>
+          ) : (
+            <span className="flex w-full flex-col items-center gap-1.5 py-6 text-center">
+              <UploadIcon className="mb-1 h-7 w-7 text-muted" />
+              <span className="text-sm font-medium">
+                Arrastra una imagen aquí
+              </span>
+              <span className="text-sm text-muted">
+                o haz clic para elegir un archivo
+              </span>
+              <span className="mt-1 text-xs text-muted">
+                PNG, JPG o WebP, hasta {MAX_FILE_SIZE_MB} MB
+              </span>
+            </span>
+          )}
+        </button>
         <input
           ref={inputRef}
           type="file"
@@ -120,20 +129,19 @@ export default function ImageDropzone({ onImageAccepted }: ImageDropzoneProps) {
         />
       </div>
 
-      {errors.length > 0 && (
-        <ul className="mt-3 space-y-1 text-sm text-red-600">
+      {(errors.length > 0 || warnings.length > 0) && (
+        <div className="mt-3 space-y-2">
           {errors.map((error) => (
-            <li key={error}>{error}</li>
+            <Notice key={error} variant="error">
+              {error}
+            </Notice>
           ))}
-        </ul>
-      )}
-
-      {warnings.length > 0 && (
-        <ul className="mt-3 space-y-1 text-sm text-amber-600">
           {warnings.map((warning) => (
-            <li key={warning}>{warning}</li>
+            <Notice key={warning} variant="warning">
+              {warning}
+            </Notice>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );

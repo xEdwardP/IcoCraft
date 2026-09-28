@@ -10,35 +10,42 @@ export default function ChromaKeyToggle({
   onChange,
 }: ChromaKeyToggleProps) {
   return (
-    <fieldset className="w-full max-w-md">
-      <legend className="mb-2 font-semibold text-slate-700">
-        Quitar fondo (opcional)
-      </legend>
+    <fieldset>
+      <legend className="sr-only">Quitar fondo</legend>
 
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={value.enabled}
-          onChange={(event) =>
-            onChange({ ...value, enabled: event.target.checked })
-          }
-        />
-        Quitar fondo de color uniforme (chroma key)
+      <label className="flex cursor-pointer items-start gap-3">
+        <span className="relative mt-0.5 inline-flex h-6 w-11 shrink-0">
+          <input
+            type="checkbox"
+            role="switch"
+            checked={value.enabled}
+            onChange={(event) =>
+              onChange({ ...value, enabled: event.target.checked })
+            }
+            className="peer sr-only"
+          />
+          <span className="absolute inset-0 rounded-full bg-line transition-colors peer-checked:bg-accent peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink" />
+          <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
+        </span>
+        <span>
+          <span className="block text-sm font-medium">
+            Quitar el fondo de color uniforme
+          </span>
+          <span className="block text-xs text-muted">
+            Vuelve transparente el color de las esquinas. Funciona bien con
+            logos sobre fondo liso; con fotos no da buen resultado.
+          </span>
+        </span>
       </label>
 
-      <p className="mt-1 text-xs text-slate-500">
-        Detecta el color de las esquinas de la imagen y lo vuelve transparente.
-        Funciona mejor con logos sobre fondo sólido; no está pensado para fotos.
-      </p>
-
       {value.enabled && (
-        <div className="mt-3">
-          <label
-            htmlFor="chroma-tolerance"
-            className="block text-xs text-slate-600"
-          >
-            Sensibilidad: {value.tolerance}
-          </label>
+        <div className="mt-4 pl-14">
+          <div className="mb-1 flex items-center justify-between text-sm">
+            <label htmlFor="chroma-tolerance" className="font-medium">
+              Sensibilidad
+            </label>
+            <span className="tabular-nums text-muted">{value.tolerance}</span>
+          </div>
           <input
             id="chroma-tolerance"
             type="range"
@@ -50,6 +57,9 @@ export default function ChromaKeyToggle({
             }
             className="w-full"
           />
+          <p className="mt-1 text-xs text-muted">
+            Más alta quita más tonos parecidos al fondo.
+          </p>
         </div>
       )}
     </fieldset>
